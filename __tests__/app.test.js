@@ -2,15 +2,9 @@ const pool = require('../lib/utils/pool');
 const setup = require('../data/setup');
 const request = require('supertest');
 const app = require('../lib/app');
-const UserService = require('../lib/services/UserService.js');
+const GithubUser = require('../lib/models/GithubUser.js');
 
 jest.mock('../lib/utils/github');
-
-const testUser = UserService.create({
-  username: 'sw33tb@nanas',
-  avatar: 'https://placekitten.com/me.png',
-  email: 'dinky@kong.com',
-})
 
 const agent = request.agent(app);
 
@@ -41,35 +35,31 @@ describe('why-i-autha routes', () => {
   });
 
   it('should create a new post, only when a user is signed in', async () => {
-    const res = await agent
-      .post('/api/v1/posts')
-      .send({ post: 'who am i where am I omg whats going on?', user_id: testUser.id });
+    const user = await GithubUser.insert({ username:'k1ll3rb33s', email:'killer@bees.com', avatar:'https://killerbees.com/bee.jpg'})
 
+    const res = await agent
+    .post('/api/v1/posts')
+    .send({ content: 'who am i where am I omg whats going on?', user_id: user.id });
+    
     expect(res.body).toEqual({
       id: expect.any(String),
-      post: 'what is life?',
+      content: 'who am i where am I omg whats going on?',
       user_id: expect.any(String)
     })
   })
+  
+  // it('should return a list of posts for an authorized use', async () => {
+  //   const res = await agent
+  //     .get(`/api/v1/github/login/callback?code=42`)
+  //     .redirects(1)
 
+  //     expect (res.body).toEqual([]);
+
+  // })
   // it('should error when a user tries to post a post & is not logged in', async () => {
 
   //   const fraudPost = await request(app).post('/api/v1/posts').send({ ...testPost, user_id: 6})
    
   //   expect(fraudPost.body).toEqual({ status: 401, message: 'You must be signed in to continue' })
-  // })
-
-  // it('should return a list of posts for a logged in user', async () => {
-  //   const [agent, user] = await registerAndSignIn()
-
-  //   const newPost = await agent.post('/api/v1/posts').send({ ...testPost, user_id: user.id})
-    
-  //   const allPosts = await agent.get('/api/v1/posts')
-
-  //   expect(allPosts.body).toEqual(expect.arrayContaining([{
-  //     id: expect.any(String),
-  //     ...testPost,
-  //     user_id: user.id
-  //   }]))
   // })
 });
