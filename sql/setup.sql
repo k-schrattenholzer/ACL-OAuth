@@ -1,4 +1,5 @@
-DROP TABLE IF EXISTS github_users;
+DROP TABLE IF EXISTS github_users CASCADE;
+DROP TABLE IF EXISTS posts;
 
 CREATE TABLE github_users (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -6,3 +7,9 @@ CREATE TABLE github_users (
   email TEXT,
   avatar TEXT
 );
+
+CREATE TABLE posts (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id BIGINT REFERENCES github_users(id),
+  content TEXT NOT NULL
+)

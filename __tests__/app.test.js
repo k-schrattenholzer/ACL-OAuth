@@ -2,8 +2,11 @@ const pool = require('../lib/utils/pool');
 const setup = require('../data/setup');
 const request = require('supertest');
 const app = require('../lib/app');
+const GithubUser = require('../lib/models/GithubUser.js');
 
 jest.mock('../lib/utils/github');
+
+const agent = request.agent(app);
 
 describe('why-i-autha routes', () => {
   beforeEach(() => {
@@ -22,19 +25,34 @@ describe('why-i-autha routes', () => {
     );
   });
 
-  it('should login and redirect users to /api/v1/github/dashboard', async () => {
-    const req = await request
-      .agent(app)
+  it('should login and redirect users to /api/v1/posts', async () => {
+    const res = await agent
       .get('/api/v1/github/login/callback?code=42')
       .redirects(1);
 
-    expect(req.body).toEqual({
-      id: expect.any(String),
-      username: 'fake_github_user',
-      email: 'not-real@example.com',
-      avatar: expect.any(String),
-      iat: expect.any(Number),
-      exp: expect.any(Number),
-    });
+    const expected = [expect.stringMatching('/api/v1/posts')];
+    expect(res.redirects).toEqual(expect.arrayContaining(expected));
   });
+
+  it('should create a new post, only when a user is signed in', async () => {
+    const user = await GithubUser.insert({ username:'k1ll3rb33s', email:'killer@bees.com', avatar:'https://killerbees.com/bee.jpg'})
+
+    const res = await agent
+    .post('/api/v1/posts')
+    .send({ content: 'who am i where am I omg whats going on?', user_id: user.id });
+    
+    expect(res.body).toEqual({
+      id: expect.any(String),
+      content: 'who am i where am I omg whats going on?',
+      user_id: expect.any(String)
+    })
+  })
+  
+  it('should return a list of posts for an authorized user', async () => {
+    const user = await GithubUser.insert({ username:'k1ll3rb33s', email:'killer@bees.com', avatar:'https://killerbees.com/bee.jpg'})
+    
+    const allPosts = await agent.get('/api/v1/posts')
+
+    expect(allPosts.body).toEqual('')
+  })
 });
