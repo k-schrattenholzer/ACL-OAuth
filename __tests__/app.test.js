@@ -48,18 +48,11 @@ describe('why-i-autha routes', () => {
     })
   })
   
-  // it('should return a list of posts for an authorized use', async () => {
-  //   const res = await agent
-  //     .get(`/api/v1/github/login/callback?code=42`)
-  //     .redirects(1)
+  it('should return a list of posts for an authorized user', async () => {
+    const user = await GithubUser.insert({ username:'k1ll3rb33s', email:'killer@bees.com', avatar:'https://killerbees.com/bee.jpg'})
+    
+    const allPosts = await agent.get('/api/v1/posts')
 
-  //     expect (res.body).toEqual([]);
-
-  // })
-  // it('should error when a user tries to post a post & is not logged in', async () => {
-
-  //   const fraudPost = await request(app).post('/api/v1/posts').send({ ...testPost, user_id: 6})
-   
-  //   expect(fraudPost.body).toEqual({ status: 401, message: 'You must be signed in to continue' })
-  // })
+    expect(allPosts.body).toEqual('')
+  })
 });
